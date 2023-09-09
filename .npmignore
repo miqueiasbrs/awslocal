@@ -1,0 +1,28 @@
+# dotenv environment variable files
+.env
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+
+# Source/Test folder
+src/
+test/
+.vscode/
+
+# Config Files
+.eslintrc.json
+.prettierrc.json
+buildspec.yml 
+jest.config.json
+sonar.properties
+template.yml
+tsconfig.json
+*.zip
+sonar*/
+coverage/
+.scannerwork/
+jest.config.json
+test-report.xml
+test-event.json
+.awslocal.json

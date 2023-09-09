@@ -1,0 +1,12 @@
+{
+  "preset": "ts-jest",
+  "testEnvironment": "node",
+  "testResultsProcessor": "jest-sonar-reporter",
+  "testRegex": ".spec.mts$",
+  "transform": {
+    "^.+\\.m(t|j)s$": "ts-jest"
+  },
+  "resetMocks": true,
+  "coverageProvider": "v8",
+  "moduleFileExtensions": ["js", "cjs", "ts", "mts"]
+}

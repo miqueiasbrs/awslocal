@@ -128,3 +128,15 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# Package file
+*.zip
+
+# Others
+build/
+sonar*/
+test-report.xml
+test-event.json
+.awslocal
+.awslocal.json
+package-lock.json

@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "module": "Node16",
+    "target": "ES2022",
+    "outDir": "dist",
+    "rootDir": ".",
+    "strict": true,
+    "noEmitOnError": true,
+    "noImplicitAny": true,
+    "removeComments": true,
+    "esModuleInterop": true,
+    "strictNullChecks": true,
+    "preserveConstEnums": true,
+    "moduleResolution": "node16",
+    "types": ["node", "jest"],
+    "declaration": true
+  },
+  "ts-node": {
+    "esm": true
+  }
+}
