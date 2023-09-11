@@ -1,5 +1,5 @@
 {
-  "name": "awslocal",
+  "name": "@capybaracode/awslocal",
   "version": "1.0.0",
   "description": "awslocal is a simple AWS Lambda runtime emulator aimed at providing faster development...",
   "main": "./build/cli.js",
@@ -7,14 +7,15 @@
   "type": "module",
   "preferGlobal": true,
   "bin": {
-    "awslocal": "./bin/cli.js"
+    "awslocal": "bin/cli.js"
   },
   "scripts": {
     "watch": "tsc -w",
     "test": "jest",
     "coverage": "jest --coverage",
     "build": "rm -rf build && tsc -p . && mv dist/src build && rm -rf dist",
-    "local": "sudo npm i -g && awslocal"
+    "local": "sudo npm i -g && awslocal",
+    "publish": "npm publish --access public"
   },
   "repository": {
     "type": "git",
@@ -32,11 +33,7 @@
   "engines": {
     "node": ">=18"
   },
-  "author": {
-    "name": "miqueiasbrs",
-    "email": "miqueias@capybaracode.com.br",
-    "url": "https://capybaracode.com.br"
-  },
+  "author": "miqueiasbrs <miqueias@capybaracode.com.br> (https://capybaracode.com.br)",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/miqueiasbrs/awslocal/issues"
@@ -63,7 +60,12 @@
     "typescript": "5.0.4"
   },
   "dependencies": {
+    "@aws-sdk/client-api-gateway": "3.370.0",
+    "@aws-sdk/client-lambda": "3.370.0",
     "commander": "11.0.0",
     "path-to-regexp": "6.2.1"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
