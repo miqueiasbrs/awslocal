@@ -61,7 +61,7 @@ It is possible to use awslocal via command line or via vscode debug, below are s
 create the .awslocal.json configuration file. To make it easier, you can use the command below.
 
 ```bash
-awslocal --init
+npx awslocal --init
 ```
 
 After this command, the .awslocal.json file will be created in the root of the project, with the default settings.
@@ -73,7 +73,7 @@ In this step we will actually emulate AWS Lambda on our local machine. The two w
 
 #### Via command line
 ```bash
-awslocal
+npx awslocal
 ```
 
 #### Via vscode debug

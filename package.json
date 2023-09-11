@@ -1,13 +1,13 @@
 {
   "name": "@capybaracode/awslocal",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "awslocal is a simple AWS Lambda runtime emulator aimed at providing faster development...",
   "main": "./build/cli.js",
   "types": "./build/cli.d.ts",
   "type": "module",
   "preferGlobal": true,
   "bin": {
-    "awslocal": "bin/cli.js"
+    "awslocal": "./build/cli.js"
   },
   "scripts": {
     "watch": "tsc -w",

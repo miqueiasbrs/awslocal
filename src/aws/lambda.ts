@@ -71,8 +71,8 @@ export class AWSLambdaInvoke {
   }
 
   static async create(lambdaPath: string, handler: string): Promise<AWSLambdaInvoke> {
-    const module = await import(path.resolve(lambdaPath.trim()))
-    let lambdaHandler: LambdaFunction = module[handler]
+    const module = await import(lambdaPath.trim())
+    let lambdaHandler: LambdaFunction = (module.default ?? module)[handler]
     if (!isAsyncFunction(lambdaHandler)) {
       lambdaHandler = async function (evt: any, ctx: any) {
         return await new Promise((resolve) => {
