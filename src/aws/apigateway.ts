@@ -44,7 +44,7 @@ export class AWSApiGatewayInvoke {
   }
 
   async __initialize(): Promise<void> {
-    if (!this.hasInitialized) return
+    if (this.hasInitialized) return
 
     if (this.config.restApiId) {
       const client = new APIGatewayClient({})
