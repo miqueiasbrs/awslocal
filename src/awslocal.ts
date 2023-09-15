@@ -188,7 +188,7 @@ export class AWSLocal {
                             data.statusCode,
                             Object.assign(data.headers ?? {}, { 'Content-Type': 'application/json' })
                           )
-                          .end(JSON.stringify(data.body))
+                          .end(data.body)
                       } else res.writeHead(403).end()
                     })
                     .catch(this.__buildError)

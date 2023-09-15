@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "module": "Node16",
+    "module": "NodeNext",
     "target": "ES2022",
     "outDir": "dist",
     "rootDir": ".",
@@ -11,7 +11,7 @@
     "esModuleInterop": true,
     "strictNullChecks": true,
     "preserveConstEnums": true,
-    "moduleResolution": "node16",
+    "moduleResolution": "NodeNext",
     "types": ["node", "jest"],
     "declaration": true
   },
