@@ -1,11 +1,8 @@
 import { randomUUID } from 'crypto'
 import { freemem } from 'os'
-import path from 'path'
 import { isAsyncFunction } from 'util/types'
 
-import { logger } from '../utils/logger.js'
-
-export type LambdaFunction = (evt: any, ctx: any) => Promise<any>
+import logger from '../utils/logger.js'
 
 class LambdaTimeoutError extends Error {}
 class LambdaContext {
@@ -30,7 +27,8 @@ class LambdaContext {
   }
 }
 
-export class AWSLambdaInvoke {
+export type LambdaFunction = (evt: any, ctx: any) => Promise<any>
+export class AWSLambda {
   constructor(private readonly lambdaFunction: LambdaFunction) {}
 
   async invoke(event: any, timeout: number): Promise<any> {
@@ -70,7 +68,7 @@ export class AWSLambdaInvoke {
     })
   }
 
-  static async create(lambdaPath: string, handler: string): Promise<AWSLambdaInvoke> {
+  static async create(lambdaPath: string, handler: string): Promise<AWSLambda> {
     const module = await import(lambdaPath.trim())
     let lambdaHandler: LambdaFunction = (module.default ?? module)[handler]
     if (!isAsyncFunction(lambdaHandler)) {
@@ -83,6 +81,6 @@ export class AWSLambdaInvoke {
       }
     }
 
-    return new AWSLambdaInvoke(lambdaHandler)
+    return new AWSLambda(lambdaHandler)
   }
 }

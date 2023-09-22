@@ -3,7 +3,7 @@ const GREEN_COLOR = '\x1b[32m'
 const YELLOW_COLOR = '\x1b[33m'
 const RESET_COLOR = '\x1b[0m'
 
-export const logger = {
+export default {
   info: (...args: any[]) => {
     console.log(''.concat(GREEN_COLOR, 'info:', RESET_COLOR), ...args, RESET_COLOR)
   },
