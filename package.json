@@ -1,6 +1,6 @@
 {
   "name": "@capybaracode/awslocal",
-  "version": "1.2.0",
+  "version": "1.2.2",
   "description": "awslocal is a simple AWS Lambda runtime emulator aimed at providing faster development...",
   "main": "./build/cli.js",
   "types": "./build/cli.d.ts",
@@ -63,7 +63,7 @@
     "typescript": "5.2.2"
   },
   "dependencies": {
-    "@aws-sdk/client-api-gateway": "^3.449.0",
+    "@aws-sdk/client-api-gateway": "3.449.0",
     "@aws-sdk/client-lambda": "3.449.0",
     "commander": "11.1.0",
     "dotenv": "16.3.1",
@@ -76,7 +76,7 @@
   },
   "imports": {
     "#*": [
-      "./*"
+      "./build/*"
     ]
   }
 }
