@@ -6,7 +6,7 @@ import { APIGatewayClient, GetResourcesCommand } from '@aws-sdk/client-api-gatew
 import dotenv from 'dotenv'
 
 import logger from '#logger.js'
-import { ApiGateway, AWSLambda, SNS } from '#utils/index.js'
+import { ApiGateway, AWSLambda, SNS, SQS } from '#utils/index.js'
 
 export const defaultConfig: App.AWSLocal.Config = {
   port: 9000,
@@ -204,6 +204,26 @@ class AWSLocal {
                                 })
                             })
                             .catch(this.__buildError)
+                          break
+                        case 'POST-sns-invoke':
+                          lambdaFunction
+                            .invoke(SNS.buildInputMock(Buffer.concat(body).toString()), this.config.lambda.timeout)
+                            .then((data) => {
+                              res.writeHead(200, { 'Content-Type': 'application/json' }).end(data)
+                            })
+                            .catch((e) => {
+                              res.writeHead(500, { 'Content-Type': 'application/json' }).end(this.__buildError(e))
+                            })
+                          break
+                        case 'POST-sqs-invoke':
+                          lambdaFunction
+                            .invoke(SQS.buildInputMock(Buffer.concat(body).toString()), this.config.lambda.timeout)
+                            .then((data) => {
+                              res.writeHead(200, { 'Content-Type': 'application/json' }).end(data)
+                            })
+                            .catch((e) => {
+                              res.writeHead(500, { 'Content-Type': 'application/json' }).end(this.__buildError(e))
+                            })
                           break
                         default:
                           res.writeHead(400, { 'Content-Type': 'application/json' }).end(this.__buildInvokeError())

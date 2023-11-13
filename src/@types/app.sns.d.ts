@@ -1,11 +1,8 @@
 declare namespace App {
   namespace AWS {
     namespace SNS {
-      interface SNSRecord {
-        EventSource: string
-        EventVersion: string
-        EventSubscriptionArn: string
-        Sns: SNS
+      interface MockRecords {
+        Records: Records[]
       }
 
       interface MessageAttributes {
@@ -13,18 +10,25 @@ declare namespace App {
         Value: string
       }
 
+      interface Records {
+        EventSource: string
+        EventVersion: string
+        EventSubscriptionArn: string
+        Sns: SNS
+      }
+
       interface SNS {
         Type: string
         MessageId: string
         TopicArn: string
-        Subject: string | null
+        Subject: string
         Message: string
         Timestamp: string
         SignatureVersion: string
         Signature: string
         SigningCertUrl: string
         UnsubscribeUrl: string
-        MessageAttributes?: Record<string, MessageAttributes>
+        MessageAttributes: Record<string, MessageAttributes>
       }
     }
   }

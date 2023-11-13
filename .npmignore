@@ -11,7 +11,7 @@ test/
 .vscode/
 
 # Config Files
-.eslintrc.json
+.eslintrc.yml
 .prettierrc.json
 buildspec.yml 
 jest.config.json

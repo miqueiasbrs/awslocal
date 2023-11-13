@@ -2,8 +2,8 @@ import { createHash } from 'crypto'
 
 import { v4 } from 'uuid'
 
-export function buildInputMock(payload: string): { Records: App.AWS.SNS.SNSRecord[] } | { snsError: boolean } {
-  const records: App.AWS.SNS.SNSRecord[] = JSON.parse(payload)
+export function buildInputMock(payload: string): App.AWS.SNS.MockRecords | { snsError: boolean } {
+  const records: App.AWS.SNS.MockRecords = JSON.parse(payload)
   if (!Array.isArray(records)) return { snsError: true }
   if (records.length === 0) return { snsError: true }
   for (const record of records) if (!record.Sns) return { snsError: true }
