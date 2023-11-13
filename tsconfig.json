@@ -1,9 +1,10 @@
 {
   "compilerOptions": {
-    "module": "NodeNext",
     "target": "ES2022",
+    "module": "NodeNext",
     "outDir": "dist",
     "rootDir": ".",
+    "baseUrl": ".",
     "strict": true,
     "noEmitOnError": true,
     "noImplicitAny": true,
@@ -11,11 +12,21 @@
     "esModuleInterop": true,
     "strictNullChecks": true,
     "preserveConstEnums": true,
-    "moduleResolution": "NodeNext",
-    "types": ["node", "jest"],
-    "declaration": true
+    "types": [
+      "node",
+      "jest"
+    ],
+    "declaration": true,
+    "paths": {
+      "#*": ["src/*"]
+    }
   },
   "ts-node": {
-    "esm": true
-  }
+    "esm": true,
+    "files": true,
+  },
+  "exclude": [
+    "dist/*",
+    "node_modules/*"
+  ]
 }

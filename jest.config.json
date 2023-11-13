@@ -1,12 +1,31 @@
 {
-  "preset": "ts-jest",
+  "preset": "ts-jest/presets/default-esm",
   "testEnvironment": "node",
   "testResultsProcessor": "jest-sonar-reporter",
-  "testRegex": ".spec.mts$",
+  "testRegex": ".(spec|e2e).(ts|tsx|mts|cts|mjs|js|cjs)$",
   "transform": {
-    "^.+\\.m(t|j)s$": "ts-jest"
+    "^.+\\.m?[tj]sx?$": [
+      "ts-jest",
+      {
+        "useESM": true
+      }
+    ]
   },
   "resetMocks": true,
   "coverageProvider": "v8",
-  "moduleFileExtensions": ["js", "cjs", "ts", "mts"]
+  "moduleFileExtensions": [
+    "js",
+    "ts",
+    "mts"
+  ],
+  "modulePathIgnorePatterns": [
+    "<rootDir>/dist/"
+  ],
+  "extensionsToTreatAsEsm": [
+    ".ts",
+    ".mts"
+  ],
+  "moduleNameMapper": {
+    "^(\\.{1,2}/.*)\\.(js)$": "$1"
+  }
 }

@@ -1,8 +1,10 @@
-import { randomUUID } from 'crypto'
 import { freemem } from 'os'
+import path from 'path'
 import { isAsyncFunction } from 'util/types'
 
-import logger from '../utils/logger.js'
+import { v4 } from 'uuid'
+
+import logger from '#logger.js'
 
 class LambdaTimeoutError extends Error {}
 class LambdaContext {
@@ -11,9 +13,9 @@ class LambdaContext {
   functionName = 'lambdalocal'
   memoryLimitInMB = Math.floor(freemem() / 1048576).toString()
   logGroupName = '/aws/lambda/lambdalocal'
-  logStreamName = `${new Date().toISOString().split('T')[0].replace('-', '/')}/[$LATEST]${randomUUID()}`
+  logStreamName = `${new Date().toISOString().split('T')[0].replace('-', '/')}/[$LATEST]${v4()}`
   invokedFunctionArn = 'arn:aws:lambda:xx-xxxx-0:000000000000:function:lambdalocal'
-  awsRequestId = randomUUID()
+  awsRequestId = v4()
 
   // eslint-disable-next-line n/handle-callback-err, @typescript-eslint/no-empty-function
   done(error?: Error, result?: any): void {}
@@ -69,7 +71,8 @@ export class AWSLambda {
   }
 
   static async create(lambdaPath: string, handler: string): Promise<AWSLambda> {
-    const module = await import(lambdaPath.trim())
+    console.log(lambdaPath)
+    const module = await import(path.resolve(lambdaPath.trim()))
     let lambdaHandler: LambdaFunction = (module.default ?? module)[handler]
     if (!isAsyncFunction(lambdaHandler)) {
       lambdaHandler = async function (evt: any, ctx: any) {
