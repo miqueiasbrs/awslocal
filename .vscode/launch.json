@@ -11,7 +11,7 @@
       "skipFiles": ["<node_internals>/**"],
       "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/awslocal",
       "cwd": "${workspaceFolder}",
-      "args": ["--config", ".awslocal.json"],
+      "args": ["server", "--config", ".awslocal.json"],
       "outputCapture": "std"
     }
   ]

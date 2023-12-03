@@ -1,6 +1,6 @@
 import { createLogger, format, transports } from 'winston'
 
-import { appConfig } from '#configs/index.js'
+import { appConfig } from './configs/index.js'
 
 export default createLogger({
   level: appConfig.logLevel,

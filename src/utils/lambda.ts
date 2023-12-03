@@ -4,7 +4,7 @@ import { isAsyncFunction } from 'util/types'
 
 import { v4 } from 'uuid'
 
-import logger from '#logger.js'
+import logger from '../logger.js'
 
 class LambdaTimeoutError extends Error {}
 class LambdaContext {
@@ -71,7 +71,6 @@ export class AWSLambda {
   }
 
   static async create(lambdaPath: string, handler: string): Promise<AWSLambda> {
-    console.log(lambdaPath)
     const module = await import(path.resolve(lambdaPath.trim()))
     let lambdaHandler: LambdaFunction = (module.default ?? module)[handler]
     if (!isAsyncFunction(lambdaHandler)) {

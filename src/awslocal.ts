@@ -5,8 +5,8 @@ import path from 'path'
 import { APIGatewayClient, GetResourcesCommand } from '@aws-sdk/client-api-gateway'
 import dotenv from 'dotenv'
 
-import logger from '#logger.js'
-import { ApiGateway, AWSLambda, SNS, SQS } from '#utils/index.js'
+import { ApiGateway, AWSLambda, SNS, SQS } from './utils/index.js'
+import logger from './logger.js'
 
 export const defaultConfig: App.AWSLocal.Config = {
   port: 9000,

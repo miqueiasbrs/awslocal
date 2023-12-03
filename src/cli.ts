@@ -1,9 +1,9 @@
 #!/usr/bin/env ts-node
 import { program } from 'commander'
 
-import { createAWSLocal, createAWSLocalConfig, defaultConfig } from '#awslocal.js'
-import { appConfig } from '#configs/index.js'
-import logger from '#logger.js'
+import { appConfig } from './configs/index.js'
+import { createAWSLocal, createAWSLocalConfig, defaultConfig } from './awslocal.js'
+import logger from './logger.js'
 
 program
   .name(appConfig.name)
