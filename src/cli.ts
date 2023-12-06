@@ -2,7 +2,7 @@
 import { program } from 'commander'
 
 import { appConfig } from './configs/index.js'
-import { createAWSLocal, createAWSLocalConfig, defaultConfig } from './awslocal.js'
+import { AWSLocal, createConfigFile, defaultConfig } from './awslocal.js'
 import logger from './logger.js'
 
 program
@@ -28,15 +28,13 @@ program
     }
 
     if (type === 'init') {
-      createAWSLocalConfig()
-      return
+      createConfigFile()
     }
 
     logger.level = options.verbose ? 'debug' : 'info'
-    const awslocal = createAWSLocal(options)
-
+    const awslocal = new AWSLocal(options)
     if (type === 'server') awslocal.server()
-    else awslocal.local(options.eventPath)
+    else awslocal.local()
   })
   .showHelpAfterError()
   .parse()

@@ -4,7 +4,6 @@
     "module": "NodeNext",
     "outDir": "dist",
     "rootDir": ".",
-    "baseUrl": ".",
     "strict": true,
     "noEmitOnError": true,
     "noImplicitAny": true,
@@ -12,14 +11,12 @@
     "esModuleInterop": true,
     "strictNullChecks": true,
     "preserveConstEnums": true,
+    "resolveJsonModule": true,
     "types": [
       "node",
       "jest"
     ],
-    "declaration": true,
-    "paths": {
-      "#*": ["src/*"]
-    }
+    "declaration": true
   },
   "ts-node": {
     "esm": true,

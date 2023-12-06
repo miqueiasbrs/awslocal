@@ -5,11 +5,11 @@ import path from 'path'
 import { APIGatewayClient, GetResourcesCommand } from '@aws-sdk/client-api-gateway'
 import dotenv from 'dotenv'
 
-import { ApiGateway, AWSLambda, SNS, SQS } from './utils/index.js'
+import { ApiGateway, SNS, SQS } from './utils/index.js'
+import { AWSLambda } from './utils/lambda.js'
 import logger from './logger.js'
 
 export const defaultConfig: App.AWSLocal.Config = {
-  port: 9000,
   lambda: {
     path: 'path/to/handler',
     handler: 'handler',
@@ -19,142 +19,81 @@ export const defaultConfig: App.AWSLocal.Config = {
   aws: {
     region: 'us-east-1',
     profile: 'default'
-  }
+  },
+  port: 9000
 }
 
-export function createAWSLocal(options: App.Commander.Options): AWSLocal {
-  const configPath = path.resolve(options.config)
-
-  let config: App.AWSLocal.Config = JSON.parse(JSON.stringify(defaultConfig))
-  if (fs.existsSync(configPath)) {
-    logger.debug(`Loading config file ${configPath}`)
-    const json = JSON.parse(fs.readFileSync(configPath, 'utf8'))
-    config = loadConfigFile(config, json)
-  }
-
-  if (options.lambdaPath) config.lambda.path = options.lambdaPath
-  if (options.lambdaHandler && options.lambdaHandler !== defaultConfig.lambda.handler)
-    config.lambda.handler = options.lambdaHandler
-  if (options.timeout && options.timeout !== defaultConfig.lambda.timeout.toString())
-    config.lambda.timeout = parseInt(options.timeout)
-  if (options.profile && options.profile !== defaultConfig.aws.profile) config.aws.profile = options.profile
-  if (options.region && options.region !== defaultConfig.aws.region) config.aws.region = options.region
-  if (options.envPath && options.envPath !== defaultConfig.lambda.env) config.lambda.env = options.envPath
-  if (options.port && options.port !== defaultConfig.port.toString()) config.port = parseInt(options.port)
-
-  return new AWSLocal(config)
-}
-
-export function createAWSLocalConfig(): void {
+export function createConfigFile(): void {
   fs.writeFileSync(
     '.awslocal.json',
-    JSON.stringify({
-      lambda: {
-        path: 'path/to/handler',
-        handler: 'handler',
-        timeout: 3,
-        env: '.env'
-      },
-      aws: {
-        region: 'us-east-1',
-        profile: 'default'
-      },
-      port: 9000,
-      apigateway: {
-        restApiId: 'your-rest-api-id',
-        resources: [
-          {
-            resource: 'your/path/{id}',
-            method: 'GET',
-            hasAuthorizer: false
+    JSON.stringify(
+      Object.assign({}, defaultConfig, {
+        apigateway: {
+          restApiId: 'your-rest-api-id',
+          resources: [
+            {
+              resource: 'your/path/{id}',
+              method: 'GET',
+              hasAuthorizer: false
+            }
+          ],
+          authorizer: {
+            context: {
+              yourKey: 'your-value'
+            },
+            functionName: 'your-authorizer-function-name'
           }
-        ],
-        authorizer: {
-          context: {
-            yourKey: 'your-value'
-          },
-          functionName: 'your-authorizer-function-name'
         }
-      }
-    })
+      }),
+      null,
+      2
+    )
   )
 }
 
-function loadConfigFile(config: App.AWSLocal.Config, json: any): App.AWSLocal.Config {
-  if (json.port && !isNaN(json.port) && json.port > 0 && json.port < 65535) config.port = parseInt(json.port.toString())
+export class AWSLocal {
+  private readonly config: App.AWSLocal.Config
 
-  if (json.lambda) {
-    if (json.lambda.path) config.lambda.path = json.lambda.path
-    if (json.lambda.handler) config.lambda.handler = json.lambda.handler
-    if (json.lambda.timeout && !isNaN(json.timeout)) config.lambda.timeout = parseInt(json.lambda.timeout.toString())
-    if (json.lambda.env) config.lambda.env = json.lambda.env
-  }
+  private readonly eventPath?: string
 
-  if (json.aws) {
-    if (json.aws.region) config.aws.region = json.aws.region
-    if (json.aws.profile) config.aws.profile = json.aws.profile
-  }
+  constructor(options: App.Commander.Options) {
+    const configFromFile = this._loadConfigFromFile(options.config)
 
-  if (json.apigateway) {
-    if (!config.apigateway) config.apigateway = {}
-
-    if (json.apigateway.restApiId) config.apigateway.restApiId = json.apigateway.restApiId
-    if (json.apigateway.resources && Array.isArray(json.apigateway.resources)) {
-      config.apigateway.resources = json.apigateway.resources.map((route: App.AWSLocal.APIGatewayRoute) => {
-        return {
-          resource: route.resource,
-          method: route.method,
-          hasAuthorizer: route.hasAuthorizer
-        }
-      })
+    if (options.lambdaPath) configFromFile.lambda.path = options.lambdaPath
+    if (options.lambdaHandler && defaultConfig.lambda.handler !== options.lambdaHandler)
+      configFromFile.lambda.handler = options.lambdaHandler
+    if (options.timeout && defaultConfig.lambda.timeout.toString() !== options.timeout)
+      configFromFile.lambda.timeout = parseInt(options.timeout)
+    if (options.profile && defaultConfig.aws.profile !== options.profile) configFromFile.aws.profile = options.profile
+    if (options.region && defaultConfig.aws.region !== options.region) configFromFile.aws.region = options.region
+    if (options.envPath && defaultConfig.lambda.env !== options.envPath) configFromFile.lambda.env = options.envPath
+    if (options.port && defaultConfig.port.toString() !== options.port) {
+      if (
+        options.port &&
+        !isNaN(parseInt(options.port)) &&
+        parseInt(options.port) > 0 &&
+        parseInt(options.port) < 65535
+      ) {
+        configFromFile.port = parseInt(options.port)
+      }
     }
-    if (json.apigateway.authorizer) {
-      if (!config.apigateway.authorizer) config.apigateway.authorizer = {}
-      config.apigateway.authorizer.functionName = json.apigateway.authorizer.functionName
-      config.apigateway.authorizer.context = json.apigateway.authorizer.context
+
+    dotenv.config({ path: configFromFile.lambda.env })
+    process.env.AWS_REGION = configFromFile.aws.region
+    process.env.AWS_PROFILE = configFromFile.aws.profile
+    process.env.AWS_DEFAULT_REGION = configFromFile.aws.region
+
+    if (configFromFile.lambda.path && !fs.existsSync(path.resolve(configFromFile.lambda.path))) {
+      logger.error(`Lambda path ${configFromFile.lambda.path} not found or not exists`)
+      process.exit(0)
     }
-  }
-  return config
-}
 
-class AWSLocal {
-  private initialized = false
-
-  constructor(private readonly config: App.AWSLocal.Config) {
-    dotenv.config({ path: config.lambda.env })
-    process.env.AWS_REGION = config.aws.region
-    process.env.AWS_PROFILE = config.aws.profile
-    process.env.AWS_DEFAULT_REGION = config.aws.region
-  }
-
-  local(eventPath: string): void {
-    this.initialize()
-      .then(() => {
-        eventPath = path.resolve(eventPath)
-        if (!fs.existsSync(eventPath)) {
-          logger.error(`Event file '${eventPath}' not found`)
-          process.exit(0)
-        }
-
-        AWSLambda.create(this.config.lambda.path as string, this.config.lambda.handler)
-          .then((lambdaFunction) => {
-            const event = JSON.parse(fs.readFileSync(eventPath, 'utf8'))
-            lambdaFunction
-              .invoke(event, this.config.lambda.timeout)
-              .then(() => process.exit(0))
-              .catch((e) => {
-                this.__internalError(e)
-              })
-          })
-          .catch((e) => {
-            this.__internalError(e)
-          })
-      })
-      .catch((err) => logger.error(err))
+    this.config = configFromFile
+    this.eventPath = options.eventPath
   }
 
   server(): void {
-    this.initialize()
+    this._serverInit()
       .then(() => {
         AWSLambda.create(this.config.lambda.path as string, this.config.lambda.handler)
           .then((lambdaFunction) => {
@@ -180,7 +119,7 @@ class AWSLocal {
                                 res.writeHead(500, { 'Content-Type': 'application/json' }).end(JSON.stringify(data))
                               else res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify(data))
                             })
-                            .catch((e) => this.__buildError(e))
+                            .catch((e) => this._buildError(e))
                           break
                         case 'ANY-apigateway-invoke':
                           ApiGateway.buildInputMock(Buffer.concat(body).toString(), req, this.config.apigateway ?? {})
@@ -200,10 +139,10 @@ class AWSLocal {
                                   } else res.writeHead(403).end()
                                 })
                                 .catch((e) => {
-                                  res.writeHead(500, { 'Content-Type': 'application/json' }).end(this.__buildError(e))
+                                  res.writeHead(500, { 'Content-Type': 'application/json' }).end(this._buildError(e))
                                 })
                             })
-                            .catch(this.__buildError)
+                            .catch(this._buildError)
                           break
                         case 'POST-sns-invoke':
                           lambdaFunction
@@ -212,7 +151,7 @@ class AWSLocal {
                               res.writeHead(200, { 'Content-Type': 'application/json' }).end(data)
                             })
                             .catch((e) => {
-                              res.writeHead(500, { 'Content-Type': 'application/json' }).end(this.__buildError(e))
+                              res.writeHead(500, { 'Content-Type': 'application/json' }).end(this._buildError(e))
                             })
                           break
                         case 'POST-sqs-invoke':
@@ -222,15 +161,15 @@ class AWSLocal {
                               res.writeHead(200, { 'Content-Type': 'application/json' }).end(data)
                             })
                             .catch((e) => {
-                              res.writeHead(500, { 'Content-Type': 'application/json' }).end(this.__buildError(e))
+                              res.writeHead(500, { 'Content-Type': 'application/json' }).end(this._buildError(e))
                             })
                           break
                         default:
-                          res.writeHead(400, { 'Content-Type': 'application/json' }).end(this.__buildInvokeError())
+                          res.writeHead(400, { 'Content-Type': 'application/json' }).end(this._buildInvokeError())
                           break
                       }
                     } catch (e: any) {
-                      res.writeHead(500, { 'Content-Type': 'application/json' }).end(this.__buildError(e))
+                      res.writeHead(500, { 'Content-Type': 'application/json' }).end(this._buildError(e))
                     }
                   })
               })
@@ -243,16 +182,117 @@ class AWSLocal {
               })
           })
           .catch((e) => {
-            this.__internalError(e)
+            this._internalError(e)
           })
       })
       .catch((err) => logger.error(err))
   }
 
-  async initialize(): Promise<void> {
-    if (this.initialized) return
-    this.initialized = true
+  local(): void {
+    if (!this.eventPath || !fs.existsSync(path.resolve(this.eventPath))) {
+      logger.error(`Event file '${this.eventPath}' not found`)
+      process.exit(0)
+    }
 
+    AWSLambda.create(this.config.lambda.path as string, this.config.lambda.handler)
+      .then((lambdaFunction) => {
+        const event = JSON.parse(fs.readFileSync(path.resolve(this.eventPath as string), 'utf8'))
+        lambdaFunction
+          .invoke(event, this.config.lambda.timeout)
+          .then(() => process.exit(0))
+          .catch((e) => {
+            this._internalError(e)
+          })
+      })
+      .catch((e) => {
+        this._internalError(e)
+      })
+  }
+
+  private _loadConfigFromFile(configPath: string): App.AWSLocal.Config {
+    configPath = path.resolve(configPath)
+
+    if (!fs.existsSync(configPath)) {
+      return defaultConfig
+    }
+
+    logger.debug(`Loading config file ${configPath}`)
+    const rawConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'))
+
+    const config: App.AWSLocal.Config = {
+      port:
+        rawConfig.port && !isNaN(rawConfig.port) && rawConfig.port > 0 && rawConfig.port < 65535
+          ? parseInt(rawConfig.port.toString())
+          : defaultConfig.port,
+      lambda: {
+        path: rawConfig.lambda.path || defaultConfig.lambda.path,
+        handler: rawConfig.lambda.handler || defaultConfig.lambda.handler,
+        timeout:
+          rawConfig.lambda.timeout && !isNaN(parseInt(rawConfig.lambda.timeout.toString()))
+            ? parseInt(rawConfig.lambda.timeout.toString())
+            : defaultConfig.lambda.timeout,
+        env: rawConfig.lambda.env || defaultConfig.lambda.env
+      },
+      aws: {
+        region: rawConfig.aws.region || defaultConfig.aws.region,
+        profile: rawConfig.aws.profile || defaultConfig.aws.profile
+      },
+      apigateway: {
+        restApiId: rawConfig.apigateway?.restApiId,
+        resources: rawConfig.apigateway?.resources
+          ? rawConfig.apigateway?.resources.map((x: any) => {
+              return {
+                resource: x.resource,
+                method: x.method,
+                hasAuthorizer: x.hasAuthorizer
+              }
+            })
+          : undefined,
+        authorizer: {
+          context: rawConfig.apigateway?.authorizer?.context,
+          functionName: rawConfig.apigateway?.authorizer?.functionName
+        }
+      }
+    }
+
+    return config
+  }
+
+  private _internalError(err: any): void {
+    const error = JSON.parse(this._buildError(err))
+    logger.error(
+      `${error.errorMessage}\n\tErrorType: ${error.errorType}\n\tStackTrace:\n\t\t${error.stackTrace
+        .map((x: string) => x.concat('\n\t\t\t'))
+        .join('')}`
+    )
+  }
+
+  private _buildError(err: any): string {
+    return JSON.stringify({
+      errorMessage: err.message,
+      errorType: err.constructor.name,
+      stackTrace: err.stack
+        .split('\n')
+        .filter((f: string) => f !== err.constructor.name)
+        .map((m: string) => m.replace('at ', '').trim())
+    })
+  }
+
+  private _buildInvokeError(): string {
+    return JSON.stringify({
+      errorMessage: 'Invalid invoke',
+      errorType: 'InvalidInvoke',
+      message: 'Choose a invoke enabled path',
+      invoke: [
+        { path: 'lambda-invoke', method: 'POST' },
+        { path: 'apigateway-invoke', method: 'ANY' },
+        { path: 'sns-invoke', method: 'POST' },
+        { path: 'sqs-invoke', method: 'POST' }
+      ]
+    })
+  }
+
+  private async _serverInit(): Promise<void> {
     if (this.config.apigateway?.restApiId) {
       const client = new APIGatewayClient({})
 
@@ -283,39 +323,5 @@ class AWSLocal {
         }
       } while (command.input.position)
     }
-  }
-
-  private __buildInvokeError(): string {
-    return JSON.stringify({
-      errorMessage: 'Invalid invoke',
-      errorType: 'InvalidInvoke',
-      message: 'Choose a invoke enabled path',
-      invoke: [
-        { path: 'lambda-invoke', method: 'POST' },
-        { path: 'apigateway-invoke', method: 'ANY' },
-        { path: 'sns-invoke', method: 'POST' },
-        { path: 'sqs-invoke', method: 'POST' }
-      ]
-    })
-  }
-
-  private __internalError(err: any): void {
-    const error = JSON.parse(this.__buildError(err))
-    logger.error(
-      `${error.errorMessage}\n\tErrorType: ${error.errorType}\n\tStackTrace:\n\t\t${error.stackTrace
-        .map((x: string) => x.concat('\n\t\t\t'))
-        .join('')}`
-    )
-  }
-
-  private __buildError(err: any): string {
-    return JSON.stringify({
-      errorMessage: err.message,
-      errorType: err.constructor.name,
-      stackTrace: err.stack
-        .split('\n')
-        .filter((f: string) => f !== err.constructor.name)
-        .map((m: string) => m.replace('at ', '').trim())
-    })
   }
 }

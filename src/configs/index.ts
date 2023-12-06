@@ -1,3 +1,3 @@
-import { defineConfig } from './defineConfig.js'
+import { defineConfig } from './define-config.js'
 
 export const appConfig = defineConfig()
