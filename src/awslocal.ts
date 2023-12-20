@@ -124,23 +124,35 @@ export class AWSLocal {
                         case 'ANY-apigateway-invoke':
                           ApiGateway.buildInputMock(Buffer.concat(body).toString(), req, this.config.apigateway ?? {})
                             .then((mock) => {
-                              lambdaFunction
-                                .invoke(mock, this.config.lambda.timeout)
-                                .then((data) => {
-                                  if (data?.errorType) {
-                                    res.writeHead(500, { 'Content-Type': 'application/json' }).end(JSON.stringify(data))
-                                  } else if (data) {
-                                    res
-                                      .writeHead(
-                                        data.statusCode,
-                                        Object.assign(data.headers ?? {}, { 'Content-Type': 'application/json' })
-                                      )
-                                      .end(data.body)
-                                  } else res.writeHead(403).end()
-                                })
-                                .catch((e) => {
-                                  res.writeHead(500, { 'Content-Type': 'application/json' }).end(this._buildError(e))
-                                })
+                              if (!mock) {
+                                res
+                                  .writeHead(403)
+                                  .end(
+                                    `Endpoint ${req.url?.substring(
+                                      req.url?.indexOf('apigateway-invoke') + 17
+                                    )} not mapped in .awslocal.json file.`
+                                  )
+                              } else {
+                                lambdaFunction
+                                  .invoke(mock, this.config.lambda.timeout)
+                                  .then((data) => {
+                                    if (data?.errorType) {
+                                      res
+                                        .writeHead(500, { 'Content-Type': 'application/json' })
+                                        .end(JSON.stringify(data))
+                                    } else if (data) {
+                                      res
+                                        .writeHead(
+                                          data.statusCode,
+                                          Object.assign(data.headers ?? {}, { 'Content-Type': 'application/json' })
+                                        )
+                                        .end(data.body)
+                                    } else res.writeHead(403).end()
+                                  })
+                                  .catch((e) => {
+                                    res.writeHead(500, { 'Content-Type': 'application/json' }).end(this._buildError(e))
+                                  })
+                              }
                             })
                             .catch(this._buildError)
                           break
