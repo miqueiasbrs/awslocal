@@ -2,23 +2,24 @@ import { randomUUID } from 'crypto'
 
 import { APIGatewayClient, GetResourcesCommand } from '@aws-sdk/client-api-gateway'
 
-import { type APIGatewayConfig, type APIGatewayRoute } from './config.js'
 import { type AWSLambda } from './lambda.js'
 
 import { InvokeCommand, LambdaClient } from '@aws-sdk/client-lambda'
 import type http from 'http'
 import { match, type MatchResult } from 'path-to-regexp'
 
-const settings: APIGatewayConfig & { hasInitialized: boolean } = {
+type APIGatewaySettings = App.APIGatewayConfig & { hasInitialized: boolean }
+const settings: APIGatewaySettings = {
   hasInitialized: false,
-  routes: []
+  routes: [],
+  authorizer: {}
 }
 
 export async function apigatewayInvoke(
   payload: string,
   req: http.IncomingMessage,
   lambdaFunction: AWSLambda,
-  config: APIGatewayConfig,
+  config: App.APIGatewayConfig,
   timeout: number
 ): Promise<any> {
   await initialize(config)
@@ -28,7 +29,7 @@ export async function apigatewayInvoke(
   return data
 }
 
-async function initialize(config: APIGatewayConfig): Promise<void> {
+async function initialize(config: App.APIGatewayConfig): Promise<void> {
   if (settings.hasInitialized) return
 
   if (config.restApiId) {
@@ -38,22 +39,23 @@ async function initialize(config: APIGatewayConfig): Promise<void> {
     do {
       const resources = await client.send(resourcesCommand)
       resources.items?.forEach((item: any) => {
-        const path: string = item.path.replaceAll('{', ':').replaceAll('}', '')
+        const resource: string = item.path.replaceAll('{', ':').replaceAll('}', '')
 
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         Object.keys(item.resourceMethods ?? {})
           .filter((f) => f !== 'OPTIONS')
-          .forEach((method) => {
+          .forEach((method: any) => {
             const hasAuthorizer = !!item.resourceMethods?.[method]?.authorizerId
 
             if (method === 'ANY') {
               settings.routes.push(
-                { path, method: 'GET', hasAuthorizer },
-                { path, method: 'PUT', hasAuthorizer },
-                { path, method: 'POST', hasAuthorizer },
-                { path, method: 'PATCH', hasAuthorizer },
-                { path, method: 'DELETE', hasAuthorizer }
+                { resource, method: 'GET', hasAuthorizer },
+                { resource, method: 'PUT', hasAuthorizer },
+                { resource, method: 'POST', hasAuthorizer },
+                { resource, method: 'PATCH', hasAuthorizer },
+                { resource, method: 'DELETE', hasAuthorizer }
               )
-            } else settings.routes.push({ path, method, hasAuthorizer })
+            } else settings.routes.push({ resource, method, hasAuthorizer })
           })
       })
       resourcesCommand.input.position = resources.position
@@ -70,9 +72,9 @@ async function initialize(config: APIGatewayConfig): Promise<void> {
 async function buildInputMock(event: any, req: http.IncomingMessage): Promise<any> {
   const url = new URL(req.url ?? '', `http://${req.headers.host}`)
 
-  const routes: Array<APIGatewayRoute & { pathToRegExp?: MatchResult<object> }> = settings.routes ?? []
+  const routes: Array<App.APIGatewayRouteConfig & { pathToRegExp?: MatchResult<object> }> = settings.routes ?? []
   const route = routes.find((f, i) => {
-    const fn = match(f.path.replaceAll('{', ':').replaceAll('}', ''))
+    const fn = match(f.resource.replaceAll('{', ':').replaceAll('}', ''))
     const extract = fn(url.pathname.replace('/apigateway-invoke', ''))
 
     if (!extract) return false
@@ -83,7 +85,7 @@ async function buildInputMock(event: any, req: http.IncomingMessage): Promise<an
   if (!route) return
 
   const inputMock: any = {
-    resource: route.path,
+    resource: route.resource,
     path: url.pathname.replace('/apigateway-invoke', ''),
     httpMethod: route.method,
     stageVariables: null,
@@ -140,6 +142,7 @@ async function buildInputMock(event: any, req: http.IncomingMessage): Promise<an
   Object.entries(req.headers).forEach(([key, value]) => {
     inputMock.headers[key] = Array.isArray(value) ? value[0] : value
   })
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   Object.keys(inputMock.headers).forEach((i) => {
     inputMock.multiValueHeaders[i] = [inputMock.headers[i]]
   })

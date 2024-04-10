@@ -33,6 +33,7 @@ export async function snsInvoke(payload: string, lambdaFunction: AWSLambda, time
             Message: JSON.stringify(x.message),
             Timestamp: new Date().toISOString(),
             SignatureVersion: '1',
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
             Signature: createHash('sha256').update(x.message).digest('base64'),
             SigningCertUrl: `https://sns.xx-xxxx-1.amazonaws.com/SimpleNotificationService-${randomUUID()}.pem`,
             UnsubscribeUrl: `https://sns.xx-xxxx-1.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=arn:aws:sns:xx-xxxx-1:000000000000:your-topic:${randomUUID()}`,

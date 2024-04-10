@@ -26,6 +26,7 @@ export async function sqsInvoke(payload: string, lambdaFunction: AWSLambda, time
       Records: (records as SQSRecord[]).map((x) => {
         return {
           messageId: randomUUID(),
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
           receiptHandle: createHash('sha256').update(x.message).digest('base64'),
           body: JSON.stringify(x.message),
           attributes: {
