@@ -1,5 +1,5 @@
-import { existsSync } from 'fs'
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 
 import { Command } from 'commander'
 
@@ -20,12 +20,11 @@ const command = new Command('server')
     }
 
     config.lambda.path = path.resolve(config.lambda.path)
-    if (!existsSync(config.lambda.path)) {
+    if (!fs.existsSync(config.lambda.path)) {
       logger.system.error(`Lambda path '${config.lambda.path}' not found`)
       process.exit(0)
     }
   })
 
-options.forEach((option) => command.addOption(option))
-
+for (const option of options) command.addOption(option)
 export default command

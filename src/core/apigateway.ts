@@ -1,12 +1,12 @@
-import { randomUUID } from 'crypto'
+import crypto from 'node:crypto'
+import type http from 'node:http'
 
 import { APIGatewayClient, GetResourcesCommand } from '@aws-sdk/client-api-gateway'
 
-import { type AWSLambda } from './lambda.js'
+import type { AWSLambda } from './lambda.js'
 
 import { InvokeCommand, LambdaClient } from '@aws-sdk/client-lambda'
-import type http from 'http'
-import { match, type MatchResult } from 'path-to-regexp'
+import { type MatchResult, match } from 'path-to-regexp'
 
 type APIGatewaySettings = App.APIGatewayConfig & { hasInitialized: boolean }
 const settings: APIGatewaySettings = {
@@ -38,26 +38,25 @@ async function initialize(config: App.APIGatewayConfig): Promise<void> {
     const resourcesCommand = new GetResourcesCommand({ restApiId: config.restApiId, embed: ['methods'] })
     do {
       const resources = await client.send(resourcesCommand)
-      resources.items?.forEach((item: any) => {
-        const resource: string = item.path.replaceAll('{', ':').replaceAll('}', '')
 
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        Object.keys(item.resourceMethods ?? {})
-          .filter((f) => f !== 'OPTIONS')
-          .forEach((method: any) => {
-            const hasAuthorizer = !!item.resourceMethods?.[method]?.authorizerId
+      for (const item of resources.items ?? []) {
+        const resource: string = (item.path ?? '').replaceAll('{', ':').replaceAll('}', '')
 
-            if (method === 'ANY') {
-              settings.routes.push(
-                { resource, method: 'GET', hasAuthorizer },
-                { resource, method: 'PUT', hasAuthorizer },
-                { resource, method: 'POST', hasAuthorizer },
-                { resource, method: 'PATCH', hasAuthorizer },
-                { resource, method: 'DELETE', hasAuthorizer }
-              )
-            } else settings.routes.push({ resource, method, hasAuthorizer })
-          })
-      })
+        for (const method of Object.keys(item.resourceMethods ?? {}).filter((f) => f !== 'OPTIONS')) {
+          const hasAuthorizer = !!item.resourceMethods?.[method]?.authorizerId
+          if (method === 'ANY') {
+            settings.routes.push(
+              { resource, method: 'GET', hasAuthorizer },
+              { resource, method: 'PUT', hasAuthorizer },
+              { resource, method: 'POST', hasAuthorizer },
+              { resource, method: 'PATCH', hasAuthorizer },
+              { resource, method: 'DELETE', hasAuthorizer }
+            )
+          } else
+            settings.routes.push({ resource, method: method as App.APIGatewayRouteConfig['method'], hasAuthorizer })
+        }
+      }
+
       resourcesCommand.input.position = resources.position
     } while (resourcesCommand.input.position)
   }
@@ -90,7 +89,7 @@ async function buildInputMock(event: any, req: http.IncomingMessage): Promise<an
     httpMethod: route.method,
     stageVariables: null,
     headers: {
-      'X-Amzn-Trace-Id': `Root=1-${randomUUID()}`,
+      'X-Amzn-Trace-Id': `Root=1-${crypto.randomUUID()}`,
       'X-Forwarded-For': '127.0.0.0',
       'X-Forwarded-Port': url.port,
       'X-Forwarded-Proto': 'http'
@@ -105,7 +104,7 @@ async function buildInputMock(event: any, req: http.IncomingMessage): Promise<an
       apiId: 'xxxxxxxxxx',
       stage: 'v1',
       protocol: 'HTTP/1.1',
-      requestId: randomUUID(),
+      requestId: crypto.randomUUID(),
       accountId: '000000000000',
       resourceId: 'xxxxxx',
       domainName: 'xxxxxxxxxx.execute-api.us-east-1.amazonaws.com',
@@ -134,18 +133,18 @@ async function buildInputMock(event: any, req: http.IncomingMessage): Promise<an
     isBase64Encoded: false
   }
 
-  Object.keys(route.pathToRegExp?.params ?? {}).forEach((k) => {
+  for (const k of Object.keys(route.pathToRegExp?.params ?? {})) {
     if (inputMock.pathParameters === null) inputMock.pathParameters = {}
     inputMock.pathParameters[k] = (route.pathToRegExp?.params ?? ({} as any))[k] ?? undefined
-  })
+  }
 
-  Object.entries(req.headers).forEach(([key, value]) => {
+  for (const [key, value] of Object.entries(req.headers)) {
     inputMock.headers[key] = Array.isArray(value) ? value[0] : value
-  })
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-  Object.keys(inputMock.headers).forEach((i) => {
+  }
+
+  for (const i of Object.keys(inputMock.headers)) {
     inputMock.multiValueHeaders[i] = [inputMock.headers[i]]
-  })
+  }
 
   for (const k of url.searchParams.keys()) {
     if (inputMock.queryStringParameters === null) inputMock.queryStringParameters = {}

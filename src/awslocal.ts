@@ -1,8 +1,8 @@
-import { existsSync, readFileSync } from 'fs'
-import http from 'http'
-import path from 'path'
+import fs from 'node:fs'
+import http from 'node:http'
+import path from 'node:path'
 
-import { apigatewayInvoke, AWSLambda, snsInvoke, sqsInvoke } from './core/index.js'
+import { AWSLambda, apigatewayInvoke, snsInvoke, sqsInvoke } from './core/index.js'
 import logger from './utils/logger.js'
 
 export const DEFAULT_AWS_LOCAL_CONFIG: App.AWSLocalConfig = {
@@ -41,12 +41,12 @@ function loadEnv(config: App.AWSLocalConfig): void {
   process.env.AWS_DEFAULT_REGION = config.aws.region
 
   config.lambda.envPath = path.resolve(config.lambda.envPath)
-  if (existsSync(config.lambda.envPath)) {
-    const env = readFileSync(config.lambda.envPath, 'utf8')
-    env.split('\n').forEach((i) => {
+  if (fs.existsSync(config.lambda.envPath)) {
+    const env = fs.readFileSync(config.lambda.envPath, 'utf8')
+    for (const i of env.split('\n')) {
       const kv: any[] = i.split('=')
       process.env[kv[0]] = kv.length > 1 ? kv[1] : undefined
-    })
+    }
   } else logger.system.warn(`Not found env file: ${config.lambda.envPath} to load environment variables`)
 }
 
@@ -126,7 +126,6 @@ export function modeServer(config: App.AWSLocalConfig): void {
                           res
                             .writeHead(
                               data.statusCode as number,
-                              // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                               Object.assign(data.headers ?? {}, { 'Content-Type': 'application/json' })
                             )
                             .end(data.body)
@@ -203,10 +202,10 @@ export function modeServer(config: App.AWSLocalConfig): void {
         })
         .listen(config.serverPort, () => {
           logger.system.info(`Started server on http://localhost:${config.serverPort}`)
-          logger.system.info(`Lambda emulator \t\tPOST \t/lambda-invoke`)
-          logger.system.info(`API Gateway emulator \tANY \t/apigateway-invoke/{your-path}`)
-          logger.system.info(`SNS emulator \t\tPOST \t/sns-invoke`)
-          logger.system.info(`SQS emulator \t\tPOST \t/sqs-invoke`)
+          logger.system.info('Lambda emulator \t\tPOST \t/lambda-invoke')
+          logger.system.info('API Gateway emulator \tANY \t/apigateway-invoke/{your-path}')
+          logger.system.info('SNS emulator \t\tPOST \t/sns-invoke')
+          logger.system.info('SQS emulator \t\tPOST \t/sqs-invoke')
         })
     })
     .catch((e) => {

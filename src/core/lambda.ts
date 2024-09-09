@@ -1,29 +1,28 @@
-import { randomUUID } from 'crypto'
-import { freemem } from 'os'
-import { isAsyncFunction } from 'util/types'
+import crypto from 'node:crypto'
+import os from 'node:os'
+
+import { isAsyncFunction } from 'node:util/types'
+
+import type { Context } from 'aws-lambda'
 
 import logger from '../utils/logger.js'
 
 class LambdaTimeoutError extends Error {}
-class LambdaContext {
-  callbackWaitsForEmptyEventLoop = false
-  functionVersion = '$LATEST'
-  functionName = 'lambdalocal'
-  memoryLimitInMB = Math.floor(freemem() / 1048576).toString()
-  logGroupName = '/aws/lambda/lambdalocal'
-  logStreamName = `${new Date().toISOString().split('T')[0].replace('-', '/')}/[$LATEST]${randomUUID()}`
-  invokedFunctionArn = 'arn:aws:lambda:xx-xxxx-0:000000000000:function:lambdalocal'
-  awsRequestId = randomUUID()
 
-  // eslint-disable-next-line n/handle-callback-err, @typescript-eslint/no-empty-function
-  done(error?: Error, result?: any): void {}
-  // eslint-disable-next-line n/handle-callback-err, @typescript-eslint/no-empty-function
-  fail(error: Error | string): void {}
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  succeed(messageOrObject: string, object: any): void {}
-
-  getRemainingTimeInMillis(): number {
-    return 0
+function createLambdaContext(): Context {
+  return {
+    callbackWaitsForEmptyEventLoop: false,
+    functionName: 'lambdalocal',
+    functionVersion: '$LATEST',
+    memoryLimitInMB: Math.floor(os.freemem() / 1048576).toString(),
+    logGroupName: '/aws/lambda/lambdalocal',
+    logStreamName: `${new Date().toISOString().split('T')[0].replace('-', '/')}/[$LATEST]${crypto.randomUUID()}`,
+    invokedFunctionArn: 'arn:aws:lambda:xx-xxxx-0:000000000000:function:lambdalocal',
+    awsRequestId: crypto.randomUUID(),
+    getRemainingTimeInMillis: () => 0,
+    done: () => {},
+    fail: () => {},
+    succeed: () => {}
   }
 }
 
@@ -33,14 +32,13 @@ export class AWSLambda {
 
   async invoke(event: any, timeout: number): Promise<any> {
     const start = new Date().getTime()
-    if (typeof event === 'string') {
-      event = JSON.parse(event)
-    }
+    const parsedEvent = typeof event === 'string' ? JSON.parse(event) : event
 
     try {
-      const context = new LambdaContext()
+      const context: Context = createLambdaContext()
+
       logger.info('START RequestId:', context.awsRequestId)
-      const result = await Promise.race([this.lambdaFunction(event, context), this.__lambdaTimeout(timeout)])
+      const result = await Promise.race([this.lambdaFunction(parsedEvent, context), this.__lambdaTimeout(timeout)])
       logger.info('End - Result:')
       logger.info(result ? JSON.stringify(result, null, 4) : '')
       logger.info(`Lambda successfully executed in ${new Date().getTime() - start}ms.`)
@@ -61,8 +59,8 @@ export class AWSLambda {
   }
 
   private async __lambdaTimeout(timeout: number): Promise<void> {
-    await new Promise((resolve, reject) => {
-      setTimeout(function () {
+    await new Promise((_, reject) => {
+      setTimeout(() => {
         reject(new LambdaTimeoutError(`Task timed out after ${timeout} seconds`))
       }, timeout * 1000)
     })
@@ -72,13 +70,12 @@ export class AWSLambda {
     const module = await import(lambdaPath.trim())
     let lambdaHandler: LambdaFunction = (module.default ?? module)[handler]
     if (!isAsyncFunction(lambdaHandler)) {
-      lambdaHandler = async function (evt: any, ctx: any) {
-        return await new Promise((resolve) => {
+      lambdaHandler = async (evt: any, ctx: any) =>
+        await new Promise((resolve) => {
           module[handler](evt, ctx, (data: any) => {
             resolve(data)
           })
         })
-      }
     }
 
     return new AWSLambda(lambdaHandler)

@@ -1,6 +1,6 @@
-import { createHash, randomUUID } from 'crypto'
+import crypto from 'node:crypto'
 
-import { type AWSLambda } from './lambda.js'
+import type { AWSLambda } from './lambda.js'
 
 interface MessageAttributes {
   Type: 'Binary' | 'String'
@@ -24,19 +24,18 @@ export async function snsInvoke(payload: string, lambdaFunction: AWSLambda, time
         return {
           EventSource: 'aws:sns',
           EventVersion: '1.0',
-          EventSubscriptionArn: `arn:aws:sns:xx-xxxx-1:000000000000:your-topic:${randomUUID()}`,
+          EventSubscriptionArn: `arn:aws:sns:xx-xxxx-1:000000000000:your-topic:${crypto.randomUUID()}`,
           Sns: {
             Type: 'Notification',
-            MessageId: randomUUID(),
-            TopicArn: `arn:aws:sns:xx-xxxx-1:000000000000:your-topic`,
+            MessageId: crypto.randomUUID(),
+            TopicArn: 'arn:aws:sns:xx-xxxx-1:000000000000:your-topic',
             Subject: x.subject ?? null,
             Message: JSON.stringify(x.message),
             Timestamp: new Date().toISOString(),
             SignatureVersion: '1',
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-            Signature: createHash('sha256').update(x.message).digest('base64'),
-            SigningCertUrl: `https://sns.xx-xxxx-1.amazonaws.com/SimpleNotificationService-${randomUUID()}.pem`,
-            UnsubscribeUrl: `https://sns.xx-xxxx-1.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=arn:aws:sns:xx-xxxx-1:000000000000:your-topic:${randomUUID()}`,
+            Signature: crypto.createHash('sha256').update(x.message).digest('base64'),
+            SigningCertUrl: `https://sns.xx-xxxx-1.amazonaws.com/SimpleNotificationService-${crypto.randomUUID()}.pem`,
+            UnsubscribeUrl: `https://sns.xx-xxxx-1.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=arn:aws:sns:xx-xxxx-1:000000000000:your-topic:${crypto.randomUUID()}`,
             MessageAttributes: x.messageAttributes ?? {}
           }
         }

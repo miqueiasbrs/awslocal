@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'fs'
+import fs from 'node:fs'
 
 import { Option } from 'commander'
 
@@ -16,84 +16,133 @@ export const options: Option[] = [
   new Option('-r, --region <region>', 'AWS region').default(DEFAULT_AWS_LOCAL_CONFIG.aws.region)
 ]
 
-export function loadConfig(opts: Record<string, string>): App.AWSLocalConfig {
-  let configFile: any = {}
-  if (existsSync(opts.config)) configFile = JSON.parse(readFileSync(opts.config, 'utf8') ?? '{}')
-
-  // Define profile
+function defineProfile(awsConfigFileProfile?: any, optsAwsProfile?: any): string {
   let profile = DEFAULT_AWS_LOCAL_CONFIG.aws.profile
-  if (configFile.aws?.profile && configFile.aws?.profile !== DEFAULT_AWS_LOCAL_CONFIG.aws.profile)
-    profile = configFile.aws.profile
-  if (opts.profile && opts.profile !== DEFAULT_AWS_LOCAL_CONFIG.aws.profile) profile = opts.profile
+  if (awsConfigFileProfile && awsConfigFileProfile.toString() !== DEFAULT_AWS_LOCAL_CONFIG.aws.profile)
+    profile = awsConfigFileProfile.toString()
+  if (optsAwsProfile && optsAwsProfile.toString() !== DEFAULT_AWS_LOCAL_CONFIG.aws.profile)
+    profile = optsAwsProfile.toString()
 
-  // Define region
+  return profile
+}
+
+function defineRegion(awsConfigFileRegion?: any, optsRegion?: any): string {
   let region = DEFAULT_AWS_LOCAL_CONFIG.aws.region
-  if (configFile.aws?.region && configFile.aws?.region !== DEFAULT_AWS_LOCAL_CONFIG.aws.region)
-    region = configFile.aws.region
-  if (opts.region && opts.region !== DEFAULT_AWS_LOCAL_CONFIG.aws.region) region = opts.region
+  if (awsConfigFileRegion && awsConfigFileRegion.toString() !== DEFAULT_AWS_LOCAL_CONFIG.aws.region)
+    region = awsConfigFileRegion.toString()
+  if (optsRegion && optsRegion.toString() !== DEFAULT_AWS_LOCAL_CONFIG.aws.region) region = optsRegion.toString()
+  return region
+}
 
-  // Define port
+function defineServerPort(configFileServerPort?: any, optsServerPort?: any): number {
   let serverPort = DEFAULT_AWS_LOCAL_CONFIG.serverPort
-  if (configFile.serverPort && configFile.serverPort !== DEFAULT_AWS_LOCAL_CONFIG.serverPort)
-    serverPort = configFile.serverPort
-  if (opts.port && opts.port !== DEFAULT_AWS_LOCAL_CONFIG.serverPort.toString()) serverPort = parseInt(opts.port)
 
   if (
-    serverPort &&
-    !isNaN(serverPort) &&
-    parseInt(serverPort.toString()) >= 1 &&
-    parseInt(serverPort.toString()) <= 65535
-  ) {
-    serverPort = parseInt(serverPort.toString())
-  } else {
+    configFileServerPort &&
+    !Number.isNaN(Number.parseInt(configFileServerPort.toString())) &&
+    Number.parseInt(configFileServerPort.toString()) !== DEFAULT_AWS_LOCAL_CONFIG.serverPort
+  )
+    serverPort = Number.parseInt(configFileServerPort.toString())
+
+  if (
+    optsServerPort &&
+    !Number.isNaN(Number.parseInt(optsServerPort.toString())) &&
+    Number.parseInt(optsServerPort.toString()) !== DEFAULT_AWS_LOCAL_CONFIG.serverPort
+  )
+    serverPort = Number.parseInt(optsServerPort.toString())
+
+  if (serverPort < 1 && serverPort > 65535) {
     logger.system.warn(`Invalid port: ${serverPort}, set default to 9000`)
     serverPort = DEFAULT_AWS_LOCAL_CONFIG.serverPort
   }
 
-  // Define lambda timeout
+  return serverPort
+}
+
+function defineTimeout(configFileLambdaTimeout?: any, optsLambdaTimeout?: any): number {
   let timeout = DEFAULT_AWS_LOCAL_CONFIG.lambda.timeout
-  if (configFile.lambda?.timeout && configFile.lambda?.timeout !== DEFAULT_AWS_LOCAL_CONFIG.lambda.timeout)
-    timeout = configFile.lambda.timeout
-  if (opts.timeout && opts.timeout !== DEFAULT_AWS_LOCAL_CONFIG.lambda.timeout.toString())
-    timeout = parseInt(opts.timeout)
 
-  if (timeout && !isNaN(timeout)) timeout = parseInt(timeout.toString())
-  else {
-    logger.system.warn(`Invalid timeout: ${timeout}, set default to 3`)
-    timeout = DEFAULT_AWS_LOCAL_CONFIG.lambda.timeout
-  }
+  if (
+    configFileLambdaTimeout &&
+    !Number.isNaN(Number.parseInt(configFileLambdaTimeout.toString())) &&
+    Number.parseInt(configFileLambdaTimeout.toString()) !== DEFAULT_AWS_LOCAL_CONFIG.lambda.timeout
+  )
+    timeout = Number.parseInt(configFileLambdaTimeout.toString())
 
-  // Define lambda env path
+  if (
+    optsLambdaTimeout &&
+    !Number.isNaN(Number.parseInt(optsLambdaTimeout.toString())) &&
+    Number.parseInt(optsLambdaTimeout.toString()) !== DEFAULT_AWS_LOCAL_CONFIG.lambda.timeout
+  )
+    timeout = Number.parseInt(optsLambdaTimeout.toString())
+
+  return timeout
+}
+
+function defineEnvPath(configFileLambdaEnvPath?: any, optsLambdaEnvPath?: any): string {
   let envPath = DEFAULT_AWS_LOCAL_CONFIG.lambda.envPath
-  if (configFile.lambda?.envPath && configFile.lambda?.envPath !== DEFAULT_AWS_LOCAL_CONFIG.lambda.envPath)
-    envPath = configFile.lambda.envPath
-  if (opts.envPath && opts.envPath !== DEFAULT_AWS_LOCAL_CONFIG.lambda.envPath) envPath = opts.envPath
+  if (configFileLambdaEnvPath && configFileLambdaEnvPath.toString() !== DEFAULT_AWS_LOCAL_CONFIG.lambda.envPath)
+    envPath = configFileLambdaEnvPath.toString()
 
-  // Define lambda handler
+  if (optsLambdaEnvPath && optsLambdaEnvPath.toString() !== DEFAULT_AWS_LOCAL_CONFIG.lambda.envPath)
+    envPath = optsLambdaEnvPath.toString()
+  return envPath
+}
+
+function defineLambdaHandler(configFileLambdaHandler?: any, optsLambdaHandler?: any): string {
   let handler = DEFAULT_AWS_LOCAL_CONFIG.lambda.handler
-  if (configFile.lambda?.handler && configFile.lambda?.handler !== DEFAULT_AWS_LOCAL_CONFIG.lambda.handler)
-    handler = configFile.lambda.handler
-  if (opts.lambdaHandler && opts.lambdaHandler !== DEFAULT_AWS_LOCAL_CONFIG.lambda.handler) handler = opts.lambdaHandler
+  if (configFileLambdaHandler && configFileLambdaHandler.tostring() !== DEFAULT_AWS_LOCAL_CONFIG.lambda.handler)
+    handler = configFileLambdaHandler.tostring()
+  if (optsLambdaHandler && optsLambdaHandler.toString() !== DEFAULT_AWS_LOCAL_CONFIG.lambda.handler)
+    handler = optsLambdaHandler.toString()
 
-  // Define lambda path
-  let path
-  if (configFile.lambda?.path && configFile.lambda?.path !== DEFAULT_AWS_LOCAL_CONFIG.lambda.path)
-    path = configFile.lambda.path
-  if (opts.lambdaPath && opts.lambdaPath !== DEFAULT_AWS_LOCAL_CONFIG.lambda.path) path = opts.lambdaPath
+  return handler
+}
 
+function defineLambdaPath(configFileLambdaPath?: any, optsLambdaPath?: any): string | undefined {
+  let path = undefined
+  if (configFileLambdaPath && configFileLambdaPath.tostring() !== DEFAULT_AWS_LOCAL_CONFIG.lambda.path)
+    path = configFileLambdaPath.tostring()
+  if (optsLambdaPath && optsLambdaPath.toString() !== DEFAULT_AWS_LOCAL_CONFIG.lambda.path)
+    path = optsLambdaPath.toString()
+
+  return path
+}
+
+function defineApiGateway(configFileApigateway?: any): App.APIGatewayConfig {
   const apigateway: App.APIGatewayConfig = { routes: [], authorizer: {} }
-  if (configFile.apigateway?.restApiId) apigateway.restApiId = configFile.apigateway.restApiId
-  if (configFile.apigateway?.routes)
-    apigateway.routes = configFile.apigateway.routes.map((route: App.APIGatewayRouteConfig) => ({
+  if (configFileApigateway?.restApiId) apigateway.restApiId = configFileApigateway.restApiId
+  if (configFileApigateway?.routes)
+    apigateway.routes = configFileApigateway.routes.map((route: App.APIGatewayRouteConfig) => ({
       resource: route.resource,
       method: route.method,
       hasAuthorizer: route.hasAuthorizer
     }))
 
-  if (configFile.apigateway?.authorizer) {
-    apigateway.authorizer.functionName = configFile.apigateway.authorizer?.functionName
-    apigateway.authorizer.context = configFile.apigateway.authorizer?.context
+  if (configFileApigateway?.authorizer) {
+    apigateway.authorizer.functionName = configFileApigateway.authorizer?.functionName
+    apigateway.authorizer.context = configFileApigateway.authorizer?.context
   }
 
-  return { aws: { profile, region }, serverPort, lambda: { timeout, envPath, handler, path }, apigateway }
+  return apigateway
+}
+
+export function loadConfig(opts: Record<string, string>): App.AWSLocalConfig {
+  let configFile: any = {}
+  if (fs.existsSync(opts.config)) configFile = JSON.parse(fs.readFileSync(opts.config, 'utf8') ?? '{}')
+
+  return {
+    aws: {
+      profile: defineProfile(configFile?.aws?.profile, opts?.profile),
+      region: defineRegion(configFile?.aws?.region, opts?.region)
+    },
+    serverPort: defineServerPort(configFile?.serverPort, opts?.port),
+    lambda: {
+      timeout: defineTimeout(configFile?.lambda?.timeout, opts?.timeout),
+      envPath: defineEnvPath(configFile?.lambda?.envPath, opts?.envPath),
+      handler: defineLambdaHandler(configFile?.lambda?.handler, opts?.lambdaHandler),
+      path: defineLambdaPath(configFile?.lambda?.path, opts?.lambdaPath)
+    },
+    apigateway: defineApiGateway(configFile?.apigateway)
+  }
 }

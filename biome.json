@@ -1,0 +1,42 @@
+{
+  "$schema": "https://biomejs.dev/schemas/1.8.3/schema.json",
+  "organizeImports": { "enabled": true },
+  "linter": {
+    "enabled": true,
+    "ignore": ["node_modules", "docs", "dist", "app", "docker", "public", "**/node_modules/**", "bin"],
+    "rules": {
+      "recommended": true,
+      "correctness": {
+        "noUnusedVariables": "error",
+        "noUnusedImports": "error"
+      },
+      "suspicious": {
+        "noExplicitAny": "off",
+        "noShadowRestrictedNames": "off",
+        "noAssignInExpressions": "off",
+        "useAwait": "error"
+      }
+    }
+  },
+  "formatter": {
+    "enabled": true,
+    "formatWithErrors": true,
+    "indentStyle": "space",
+    "lineWidth": 120,
+    "indentWidth": 2,
+    "lineEnding": "lf",
+    "ignore": ["node_modules", "docs", "dist", "app", "docker", "public", "**/node_modules/**", "bin"]
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "semicolons": "asNeeded",
+      "trailingCommas": "none"
+    }
+  },
+  "files": {
+    "include": ["src/**/*.ts", "src/**/*.js", "./package.json", "./tsconfig.json"],
+    "ignore": ["node_modules", "**/node_modules/**", "dist", "app", "docker", "bin"],
+    "ignoreUnknown": true
+  }
+}

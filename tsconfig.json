@@ -11,20 +11,13 @@
     "esModuleInterop": true,
     "strictNullChecks": true,
     "preserveConstEnums": true,
+    "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
-    "types": [
-      "node",
-      "jest"
-    ],
+    "moduleDetection": "force",
+    "allowJs": false,
+    "types": ["node", "jest"],
     "declaration": true
   },
-  "ts-node": {
-    "esm": true,
-    "files": true,
-  },
-  "exclude": [
-    "dist/*",
-    "node_modules/*"
-  ]
+  "exclude": ["dist/*", "node_modules/"]
 }

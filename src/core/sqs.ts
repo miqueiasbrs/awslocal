@@ -1,6 +1,6 @@
-import { createHash, randomUUID } from 'crypto'
+import crypto from 'node:crypto'
 
-import { type AWSLambda } from './lambda.js'
+import type { AWSLambda } from './lambda.js'
 
 interface MessageAttributes {
   stringValue?: string
@@ -25,9 +25,8 @@ export async function sqsInvoke(payload: string, lambdaFunction: AWSLambda, time
     JSON.stringify({
       Records: (records as SQSRecord[]).map((x) => {
         return {
-          messageId: randomUUID(),
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-          receiptHandle: createHash('sha256').update(x.message).digest('base64'),
+          messageId: crypto.randomUUID(),
+          receiptHandle: crypto.createHash('sha256').update(x.message).digest('base64'),
           body: JSON.stringify(x.message),
           attributes: {
             ApproximateReceiveCount: '1',
@@ -39,8 +38,9 @@ export async function sqsInvoke(payload: string, lambdaFunction: AWSLambda, time
             ApproximateFirstReceiveTimestamp: Date.now()
           },
           messageAttributes: x.messageAttributes,
-          md5OfBody: createHash('md5').update(x.message).digest('hex'),
-          md5OfMessageAttributes: createHash('md5')
+          md5OfBody: crypto.createHash('md5').update(x.message).digest('hex'),
+          md5OfMessageAttributes: crypto
+            .createHash('md5')
             .update(JSON.stringify(x.messageAttributes ?? {}))
             .digest('hex'),
           eventSource: 'aws:sqs',
