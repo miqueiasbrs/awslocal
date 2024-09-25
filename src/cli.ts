@@ -2,15 +2,16 @@
 
 import { program } from 'commander'
 
-import initCommand from './commands/init-command.js'
-import localCommand from './commands/local-command.js'
-import serverCommand from './commands/server-command.js'
-import { appConfig } from './configs/index.js'
+import { description, name, version } from '../package.json'
+
+import initCommand from './cmd/init.js'
+import localCommand from './cmd/local.js'
+import serverCommand from './cmd/server.js'
 
 program
-  .name(appConfig.name)
-  .version(appConfig.version)
-  .description(appConfig.description)
+  .name(name.replace('@capybaracode/', ''))
+  .version(version)
+  .description(description)
   .addCommand(initCommand)
   .addCommand(serverCommand)
   .addCommand(localCommand)

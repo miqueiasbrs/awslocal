@@ -13,7 +13,9 @@
     "watch": "tsc -w",
     "test": "jest",
     "coverage": "jest --coverage",
-    "build": "rm -rf build && tsc -p . && mv dist/src build && rm -rf dist",
+    "prebuild": "rm -rf build",
+    "build": "tsc -p . && mv dist/src build && rm -rf dist",
+    "postbuild": "chmod u+x ./build/cli.js",
     "local": "sudo npm i -g && awslocal",
     "publish": "npm publish --access public"
   },
@@ -40,20 +42,19 @@
   },
   "homepage": "https://github.com/miqueiasbrs/awslocal#readme",
   "devDependencies": {
-    "@biomejs/biome": "1.8.3",
-    "@types/aws-lambda": "8.10.143",
-    "@types/jest": "29.5.12",
-    "@types/node": "22.5.0",
-    "jest": "29.7.0",
-    "typescript": "5.5.4"
+    "@biomejs/biome": "1.9.1",
+    "@types/aws-lambda": "8.10.145",
+    "@types/node": "22.5.5",
+    "typescript": "5.6.2"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "dependencies": {
     "@aws-sdk/client-api-gateway": "^3.x",
     "@aws-sdk/client-lambda": "^3.x",
+    "chalk": "5.3.0",
     "commander": "12.1.0",
-    "path-to-regexp": "8.0.0"
-  },
-  "publishConfig": {
-    "access": "public"
+    "path-to-regexp": "8.1.0"
   }
 }

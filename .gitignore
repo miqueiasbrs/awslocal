@@ -132,11 +132,5 @@ dist
 # Package file
 *.zip
 
-# Others
+# Builds
 build/
-sonar*/
-test-report.xml
-test-event.json
-.awslocal
-.awslocal.json
-package-lock.json

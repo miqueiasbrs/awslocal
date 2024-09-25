@@ -16,8 +16,8 @@
     "skipLibCheck": true,
     "moduleDetection": "force",
     "allowJs": false,
-    "types": ["node", "jest"],
+    "types": ["node"],
     "declaration": true
   },
-  "exclude": ["dist/*", "node_modules/"]
+  "exclude": ["build/*", "node_modules/"]
 }

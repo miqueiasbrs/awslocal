@@ -3,9 +3,8 @@ import path from 'node:path'
 
 import { Command } from 'commander'
 
-import { DEFAULT_AWS_LOCAL_CONFIG } from '../awslocal.js'
-import logger from '../utils/logger.js'
-
+import { DEFAULT_AWS_LOCAL_CONFIG, server } from '../core/awslocal.js'
+import logger from '../core/logger.js'
 import { loadConfig, options } from './commons.js'
 
 const command = new Command('server')
@@ -13,17 +12,19 @@ const command = new Command('server')
   .option('-P, --port <number>', 'Server port', DEFAULT_AWS_LOCAL_CONFIG.serverPort.toString())
   .helpOption('-H, --help')
   .action(() => {
-    const config = loadConfig(Object.assign({}, command.opts(), command.parent?.opts()))
+    const config = loadConfig({ ...command.opts(), ...command.parent?.opts() })
     if (!config.lambda.path) {
-      logger.system.error(`Lambda path '${config.lambda.path}' not found`)
+      logger.error(`Lambda path '${config.lambda.path}' not found`)
       process.exit(0)
     }
 
     config.lambda.path = path.resolve(config.lambda.path)
     if (!fs.existsSync(config.lambda.path)) {
-      logger.system.error(`Lambda path '${config.lambda.path}' not found`)
+      logger.error(`Lambda path '${config.lambda.path}' not found`)
       process.exit(0)
     }
+
+    server(config)
   })
 
 for (const option of options) command.addOption(option)
