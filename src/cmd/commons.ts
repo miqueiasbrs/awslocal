@@ -106,6 +106,16 @@ function defineLambdaPath(configFileLambdaPath?: any, optsLambdaPath?: any): str
   if (optsLambdaPath && optsLambdaPath.toString() !== DEFAULT_AWS_LOCAL_CONFIG.lambda.path)
     path = optsLambdaPath.toString()
 
+  if (!path) {
+    logger.error(`Lambda path '${path}' not found`)
+    process.exit(0)
+  }
+
+  path = path.resolve(path)
+  if (!fs.existsSync(path)) {
+    logger.error(`Lambda path '${path}' not found`)
+    process.exit(0)
+  }
   return path
 }
 

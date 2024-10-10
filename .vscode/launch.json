@@ -13,6 +13,16 @@
       "cwd": "${workspaceFolder}",
       "args": ["--config", ".awslocal.json"],
       "outputCapture": "std"
-    }
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debugs via tsx",
+      "skipFiles": ["<node_internals>/**"],
+      "runtimeExecutable": "tsx",
+      "cwd": "${workspaceFolder}",
+      "args": ["src/cli.ts", "local"],
+      "outputCapture": "std"
+    },
   ]
 }

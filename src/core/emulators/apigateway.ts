@@ -61,6 +61,7 @@ export class APIGatewayEmulator {
   async invoke(payload: string | null, request: http.IncomingMessage, timeout: number): Promise<ProxyResult> {
     const event = await this._convertHttpRequestToProxyEvent(payload, request)
     const response = await this.lambdaEmulator.invoke(JSON.stringify(event), timeout)
+    if (response.errorType) throw response
     return {
       statusCode: response.statusCode,
       headers: response.headers,

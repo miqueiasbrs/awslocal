@@ -13,16 +13,6 @@ const command = new Command('local')
   .helpOption('-H, --help')
   .action(() => {
     const config = loadConfig({ ...command.opts(), ...command.parent?.opts() })
-    if (!config.lambda.path) {
-      logger.error(`Lambda path '${config.lambda.path}' not found`)
-      process.exit(0)
-    }
-
-    config.lambda.path = path.resolve(config.lambda.path)
-    if (!fs.existsSync(config.lambda.path)) {
-      logger.error(`Lambda path '${config.lambda.path}' not found`)
-      process.exit(0)
-    }
 
     let eventPath: string | undefined = command.opts().eventPath
     if (!eventPath) {
