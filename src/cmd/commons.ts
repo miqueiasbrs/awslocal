@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import path from 'node:path'
 
 import { Option } from 'commander'
 
@@ -100,23 +101,23 @@ function defineLambdaHandler(configFileLambdaHandler?: any, optsLambdaHandler?: 
 }
 
 function defineLambdaPath(configFileLambdaPath?: any, optsLambdaPath?: any): string | undefined {
-  let path = undefined
+  let lambdaPath = undefined
   if (configFileLambdaPath && configFileLambdaPath.toString() !== DEFAULT_AWS_LOCAL_CONFIG.lambda.path)
-    path = configFileLambdaPath.toString()
+    lambdaPath = configFileLambdaPath.toString()
   if (optsLambdaPath && optsLambdaPath.toString() !== DEFAULT_AWS_LOCAL_CONFIG.lambda.path)
-    path = optsLambdaPath.toString()
+    lambdaPath = optsLambdaPath.toString()
 
-  if (!path) {
-    logger.error(`Lambda path '${path}' not found`)
+  if (!lambdaPath) {
+    logger.error(`Lambda path '${lambdaPath}' not found`)
     process.exit(0)
   }
 
-  path = path.resolve(path)
-  if (!fs.existsSync(path)) {
-    logger.error(`Lambda path '${path}' not found`)
+  lambdaPath = path.resolve(lambdaPath)
+  if (!fs.existsSync(lambdaPath)) {
+    logger.error(`Lambda path '${lambdaPath}' not found`)
     process.exit(0)
   }
-  return path
+  return lambdaPath
 }
 
 function defineApiGateway(configFileApigateway?: any) {
