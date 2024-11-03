@@ -90,7 +90,7 @@ export class LambdaEmulator {
     await new Promise((_, reject) =>
       setTimeout(() => {
         reject(new LambdaTimeoutError(`Task timed out after ${timeout} seconds`))
-      }, timeout)
+      }, timeout * 1000)
     )
   }
 }
