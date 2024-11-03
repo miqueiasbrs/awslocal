@@ -134,3 +134,8 @@ dist
 
 # Builds
 build/
+
+
+package-lock.json
+.vscode/settings.json
+.sonar/
