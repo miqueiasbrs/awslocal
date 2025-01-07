@@ -1,6 +1,6 @@
 {
   "name": "@capybaracode/awslocal",
-  "version": "1.4.7",
+  "version": "1.4.12",
   "description": "awslocal is a simple AWS Lambda runtime emulator aimed at providing faster development...",
   "main": "./build/cli.js",
   "types": "./build/cli.d.ts",
@@ -33,7 +33,7 @@
     "serverless"
   ],
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "author": "miqueiasbrs <miqueias@capybaracode.com.br> (https://capybaracode.com.br)",
   "license": "MIT",
@@ -41,20 +41,20 @@
     "url": "https://github.com/miqueiasbrs/awslocal/issues"
   },
   "homepage": "https://github.com/miqueiasbrs/awslocal#readme",
-  "devDependencies": {
-    "@biomejs/biome": "1.9.1",
-    "@types/aws-lambda": "8.10.145",
-    "@types/node": "22.5.5",
-    "typescript": "5.6.2"
-  },
   "publishConfig": {
     "access": "public"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.9.4",
+    "@types/aws-lambda": "8.10.147",
+    "@types/node": "22.10.5",
+    "typescript": "5.7.2"
   },
   "dependencies": {
     "@aws-sdk/client-api-gateway": "^3.x",
     "@aws-sdk/client-lambda": "^3.x",
-    "chalk": "5.3.0",
-    "commander": "12.1.0",
-    "path-to-regexp": "8.1.0"
+    "chalk": "5.4.1",
+    "commander": "13.0.0",
+    "path-to-regexp": "8.2.0"
   }
 }
