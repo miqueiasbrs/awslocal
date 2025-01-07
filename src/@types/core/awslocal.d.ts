@@ -1,4 +1,4 @@
-declare interface AWSLocalConfig {
+declare type AWSLocalConfig = {
   aws: {
     profile: string
     region: string

@@ -2,9 +2,9 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import { Option } from 'commander'
+import logger from '../core/logger.js'
 
 import { DEFAULT_AWS_LOCAL_CONFIG } from '../core/awslocal.js'
-import logger from '../core/logger.js'
 
 export const options: Option[] = [
   new Option('-t, --timeout <number>', 'Lambda function timeout in seconds').default(

@@ -3,9 +3,10 @@ import path from 'node:path'
 
 import { Command } from 'commander'
 
-import { local } from '../core/awslocal.js'
 import logger from '../core/logger.js'
 import { loadConfig, options } from './commons.js'
+
+import { local } from '../core/awslocal.js'
 
 const command = new Command('local')
   .description('Start awslocal in local mode')

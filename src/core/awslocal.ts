@@ -4,6 +4,7 @@ import path from 'node:path'
 
 import { APIGatewayEmulator } from './emulators/apigateway.js'
 import { LambdaEmulator } from './emulators/lambda.js'
+
 import logger from './logger.js'
 
 export const DEFAULT_AWS_LOCAL_CONFIG: AWSLocalConfig = {
